@@ -1,7 +1,9 @@
 import flet as ft
-import sympy as sp  # Biblioteca para cálculos matemáticos avançados
+import sympy as sp
+import datetime
+import json
 
-# Classe base para os botões
+
 class CalcButton(ft.ElevatedButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__()
@@ -10,35 +12,37 @@ class CalcButton(ft.ElevatedButton):
         self.on_click = button_clicked
         self.data = text
 
-# Classe para botões de dígitos (0-9)
+
 class DigitButton(CalcButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__(text, button_clicked, expand)
         self.bgcolor = ft.colors.WHITE24
         self.color = ft.colors.WHITE
 
-# Classe para botões de operações (+, -, *, /, =)
+
 class ActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.ORANGE
         self.color = ft.colors.WHITE
 
-# Classe para botões de ações extras (AC, CE, ⬅️, √, x², %)
+
 class ExtraActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.BLUE_GREY_100
         self.color = ft.colors.BLACK
 
-# Classe principal da calculadora
+
 class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=32)
-        self.expression = ""  # Armazena a expressão atual para avaliação
+        self.expression = ""  
+        self.history = self.load_history()  
+        self.history_list = ft.Column(visible=False)  
 
-        # Layout da calculadora com botões básicos, extras, avançados e o botão "="
+        
         self.content = ft.Container(
             width=400,
             bgcolor=ft.colors.BLACK,
@@ -93,60 +97,107 @@ class CalculatorApp(ft.Container):
                             ExtraActionButton("%", self.button_clicked),
                         ]
                     ),
+                    ft.ElevatedButton("Mostrar Histórico", on_click=self.toggle_history),
+                    ft.ElevatedButton("Limpar Histórico", on_click=self.clear_history),
+                    self.history_list,
                 ]
             ),
         )
 
-    # Manipular cliques nos botões
+    
     def button_clicked(self, e):
-        if e.control.data == "AC":  # Limpar tudo
+        if e.control.data == "AC":
             self.result.value = "0"
             self.expression = ""
-        elif e.control.data == "CE":  # Limpar a entrada atual
+        elif e.control.data == "CE":
             self.result.value = "0"
-        elif e.control.data == "⬅️":  # Remover o último caractere
+        elif e.control.data == "⬅️":
             self.result.value = self.result.value[:-1] if self.result.value else "0"
             if not self.result.value:
                 self.result.value = "0"
-        elif e.control.data == "=":  # Avaliar a expressão
+        elif e.control.data == "=":
             try:
-                # Avaliar a expressão usando sympy
                 self.expression += self.result.value
                 resultado = sp.N(sp.sympify(self.expression))
+                self.add_to_history(self.expression, resultado)
                 self.result.value = str(resultado)
                 self.expression = ""
             except Exception:
                 self.result.value = "Erro"
-        elif e.control.data == "√":  # Calcular raiz quadrada
+        elif e.control.data == "√":
             try:
                 valor = float(self.result.value)
                 if valor >= 0:
-                    self.result.value = str(sp.N(sp.sqrt(valor)))
+                    resultado = sp.N(sp.sqrt(valor))
+                    self.add_to_history(f"√({valor})", resultado)
+                    self.result.value = str(resultado)
                 else:
                     self.result.value = "Erro"
             except Exception:
                 self.result.value = "Erro"
-        elif e.control.data == "x²":  # Calcular o quadrado do número
+        elif e.control.data == "x²":
             try:
                 valor = float(self.result.value)
-                self.result.value = str(valor ** 2)
+                resultado = valor ** 2
+                self.add_to_history(f"({valor})²", resultado)
+                self.result.value = str(resultado)
             except Exception:
                 self.result.value = "Erro"
-        elif e.control.data == "%":  # Calcular a porcentagem
+        elif e.control.data == "%":
             try:
                 valor = float(self.result.value)
-                self.result.value = str(valor / 100)
+                resultado = valor / 100
+                self.add_to_history(f"{valor}%", resultado)
+                self.result.value = str(resultado)
             except Exception:
                 self.result.value = "Erro"
         else:
-            # Adicionar números e operadores
             if self.result.value == "0" or self.result.value == "Erro":
                 self.result.value = e.control.data
             else:
                 self.result.value += e.control.data
         self.update()
 
-# Função principal para rodar a calculadora
+    
+    def add_to_history(self, expression, result):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.history.insert(0, {"expression": expression, "result": str(result), "time": timestamp})
+        if len(self.history) > 10:
+            self.history.pop()  
+        self.save_history()
+
+    
+    def save_history(self):
+        with open("calc_history.json", "w") as f:
+            json.dump(self.history, f)
+
+    
+    def load_history(self):
+        try:
+            with open("calc_history.json", "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return []
+
+    
+    def toggle_history(self, e):
+        if self.history_list.visible:
+            self.history_list.visible = False
+        else:
+            self.history_list.controls = [
+                ft.Text(f"{item['time']} - {item['expression']} = {item['result']}")
+                for item in self.history
+            ]
+            self.history_list.visible = True
+        self.update()
+
+    
+    def clear_history(self, e):
+        self.history = []
+        self.save_history()
+        self.toggle_history(None)
+
+
 def main(page: ft.Page):
     page.title = "Calculadora Avançada"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
