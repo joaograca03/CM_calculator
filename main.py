@@ -3,7 +3,6 @@ import sympy as sp
 import datetime
 import json
 
-
 class CalcButton(ft.ElevatedButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__()
@@ -12,13 +11,11 @@ class CalcButton(ft.ElevatedButton):
         self.on_click = button_clicked
         self.data = text
 
-
 class DigitButton(CalcButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__(text, button_clicked, expand)
         self.bgcolor = ft.colors.WHITE24
         self.color = ft.colors.WHITE
-
 
 class ActionButton(CalcButton):
     def __init__(self, text, button_clicked):
@@ -26,23 +23,19 @@ class ActionButton(CalcButton):
         self.bgcolor = ft.colors.ORANGE
         self.color = ft.colors.WHITE
 
-
 class ExtraActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.BLUE_GREY_100
         self.color = ft.colors.BLACK
 
-
 class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=32)
-        self.expression = ""
+        self.expression = ft.Text(value="", color=ft.colors.GREY_500, size=24)
         self.history = self.load_history()  
         self.history_list = ft.Column(visible=False)  
-
-        
         self.content = ft.Container(
             width=400,
             bgcolor=ft.colors.BLACK,
@@ -50,65 +43,74 @@ class CalculatorApp(ft.Container):
             padding=20,
             content=ft.Column(
                 controls=[
+                    ft.Row(controls=[self.expression], alignment=ft.MainAxisAlignment.END),
                     ft.Row(controls=[self.result], alignment=ft.MainAxisAlignment.END),
                     ft.Row(
                         controls=[
-                            ExtraActionButton("AC", self.button_clicked),
-                            ExtraActionButton("CE", self.button_clicked),
-                            ExtraActionButton("⬅️", self.button_clicked),
-                            ActionButton("/", self.button_clicked),
+                            ExtraActionButton(text="AC", button_clicked=self.button_clicked),
+                            ExtraActionButton(text="CE", button_clicked=self.button_clicked),
+                            ExtraActionButton(text="⬅️", button_clicked=self.button_clicked),
+                            ActionButton(text="/", button_clicked=self.button_clicked),
                         ]
                     ),
                     ft.Row(
                         controls=[
-                            DigitButton("7", self.button_clicked),
-                            DigitButton("8", self.button_clicked),
-                            DigitButton("9", self.button_clicked),
-                            ActionButton("*", self.button_clicked),
+                            DigitButton(text="7", button_clicked=self.button_clicked),
+                            DigitButton(text="8", button_clicked=self.button_clicked),
+                            DigitButton(text="9", button_clicked=self.button_clicked),
+                            ActionButton(text="*", button_clicked=self.button_clicked),
                         ]
                     ),
                     ft.Row(
                         controls=[
-                            DigitButton("4", self.button_clicked),
-                            DigitButton("5", self.button_clicked),
-                            DigitButton("6", self.button_clicked),
-                            ActionButton("-", self.button_clicked),
+                            DigitButton(text="4", button_clicked=self.button_clicked),
+                            DigitButton(text="5", button_clicked=self.button_clicked),
+                            DigitButton(text="6", button_clicked=self.button_clicked),
+                            ActionButton(text="-", button_clicked=self.button_clicked),
                         ]
                     ),
                     ft.Row(
                         controls=[
-                            DigitButton("1", self.button_clicked),
-                            DigitButton("2", self.button_clicked),
-                            DigitButton("3", self.button_clicked),
-                            ActionButton("+", self.button_clicked),
+                            DigitButton(text="1", button_clicked=self.button_clicked),
+                            DigitButton(text="2", button_clicked=self.button_clicked),
+                            DigitButton(text="3", button_clicked=self.button_clicked),
+                            ActionButton(text="+", button_clicked=self.button_clicked),
                         ]
                     ),
                     ft.Row(
                         controls=[
-                            DigitButton("0", self.button_clicked, expand=2),
-                            DigitButton(".", self.button_clicked),
-                            ActionButton("=", self.button_clicked),
+                            DigitButton(text="0", button_clicked=self.button_clicked, expand=2),
+                            DigitButton(text=".", button_clicked=self.button_clicked),
+                            ActionButton(text="=", button_clicked=self.button_clicked),
                         ]
                     ),
                     ft.Row(
                         controls=[
-                            ExtraActionButton("√", self.button_clicked),
-                            ExtraActionButton("x²", self.button_clicked),
-                            ExtraActionButton("%", self.button_clicked),
+                            ExtraActionButton(text="(", button_clicked=self.button_clicked),
+                            ExtraActionButton(text=")", button_clicked=self.button_clicked),
+                            ExtraActionButton(text="√", button_clicked=self.button_clicked),
+                            ExtraActionButton(text="x²", button_clicked=self.button_clicked),
+                            ExtraActionButton(text="%", button_clicked=self.button_clicked),
                         ]
                     ),
-                    ft.ElevatedButton("Mostrar Histórico", on_click=self.toggle_history),
-                    ft.ElevatedButton("Limpar Histórico", on_click=self.clear_history),
-                    self.history_list,
+                    ft.ElevatedButton(text="Mostrar Histórico", on_click=self.toggle_history),
+                    ft.ElevatedButton(text="Limpar Histórico", on_click=self.clear_history),
+                    self.history_list
                 ]
             ),
         )
 
-    
+    def format_number(self, value):
+        try:
+            num = float(str(value))
+            return f"{num:,.10f}".replace(",", " ").rstrip("0").rstrip(".")
+        except ValueError:
+            return str(value)
+
     def button_clicked(self, e):
         if e.control.data == "AC":
+            self.expression.value = ""
             self.result.value = "0"
-            self.expression = ""
         elif e.control.data == "CE":
             self.result.value = "0"
         elif e.control.data == "⬅️":
@@ -117,39 +119,33 @@ class CalculatorApp(ft.Container):
                 self.result.value = "0"
         elif e.control.data == "=":
             try:
-                self.expression += self.result.value
-                resultado = sp.N(sp.sympify(self.expression))
-                self.add_to_history(self.expression, resultado)
-                self.result.value = str(resultado)
-                self.expression = ""
+                full_expression = self.expression.value + self.result.value
+                sympy_result = sp.N(sp.sympify(full_expression))
+                formatted_result = self.format_number(sympy_result)
+                self.add_to_history(full_expression, formatted_result)
+                self.result.value = formatted_result
+                self.expression.value = ""
             except Exception:
+                self.result.value = "Erro"
+        elif e.control.data == "+/-":
+            if self.result.value.startswith("-"):
+                self.result.value = self.result.value[1:]
+            else:
+                self.result.value = "-" + self.result.value
+        elif e.control.data == "%":
+            try:
+                self.result.value = str(float(self.result.value) / 100)
+            except:
                 self.result.value = "Erro"
         elif e.control.data == "√":
             try:
-                valor = float(self.result.value)
-                if valor >= 0:
-                    resultado = sp.N(sp.sqrt(valor))
-                    self.add_to_history(f"√({valor})", resultado)
-                    self.result.value = str(resultado)
-                else:
-                    self.result.value = "Erro"
-            except Exception:
+                self.result.value = self.format_number(sp.N(sp.sqrt(float(self.result.value))))
+            except:
                 self.result.value = "Erro"
         elif e.control.data == "x²":
             try:
-                valor = float(self.result.value)
-                resultado = valor ** 2
-                self.add_to_history(f"({valor})²", resultado)
-                self.result.value = str(resultado)
-            except Exception:
-                self.result.value = "Erro"
-        elif e.control.data == "%":
-            try:
-                valor = float(self.result.value)
-                resultado = valor / 100
-                self.add_to_history(f"{valor}%", resultado)
-                self.result.value = str(resultado)
-            except Exception:
+                self.result.value = self.format_number(float(self.result.value) ** 2)
+            except:
                 self.result.value = "Erro"
         else:
             if self.result.value == "0" or self.result.value == "Erro":
@@ -158,20 +154,17 @@ class CalculatorApp(ft.Container):
                 self.result.value += e.control.data
         self.update()
 
-    
     def add_to_history(self, expression, result):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.history.insert(0, {"expression": expression, "result": str(result), "time": timestamp})
+        self.history.insert(0, {"expression": expression, "result": result, "time": timestamp})
         if len(self.history) > 10:
             self.history.pop()
         self.save_history()
 
-    
     def save_history(self):
         with open("calc_history.json", "w") as f:
             json.dump(self.history, f)
 
-    
     def load_history(self):
         try:
             with open("calc_history.json", "r") as f:
@@ -179,41 +172,42 @@ class CalculatorApp(ft.Container):
         except FileNotFoundError:
             return []
 
-    
-    def delete_from_history(self, index):
-        if 0 <= index < len(self.history):
-            self.history.pop(index)
-            self.save_history()
-            self.toggle_history(None)
-
-    
     def toggle_history(self, e):
         if self.history_list.visible:
             self.history_list.visible = False
         else:
             self.history_list.controls = [
-                ft.Row([
-                    ft.Text(f"{item['time']} - {item['expression']} = {item['result']}"),
-                    ft.IconButton(icon=ft.icons.COPY, on_click=lambda _, v=item['result']: self.copy_to_clipboard(v)),
-                    ft.IconButton(icon=ft.icons.DELETE, on_click=lambda _, idx=i: self.delete_from_history(idx))
-                ])
+                ft.Row(
+                    [
+                        ft.Text(f"{i+1}. {item['expression']} = {item['result']}"),
+                        ft.IconButton(icon=ft.icons.COPY, on_click=lambda _, r=item['result']: self.copy_to_clipboard(r)),
+                        ft.IconButton(icon=ft.icons.DELETE, on_click=lambda _, idx=i: self.delete_from_history(idx))
+                    ]
+                )
                 for i, item in enumerate(self.history)
             ]
             self.history_list.visible = True
         self.update()
 
-    
+    def copy_to_clipboard(self, result):
+        print(f"Copiado: {result}")
+
+    def delete_from_history(self, idx):
+        if 0 <= idx < len(self.history):
+            self.history.pop(idx)
+            self.save_history()  
+            self.toggle_history(None)
+
     def clear_history(self, e):
         self.history = []
         self.save_history()
         self.toggle_history(None)
-
 
 def main(page: ft.Page):
     page.title = "Calculadora Avançada"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     calc = CalculatorApp()
-    page.add(calc)
+    page.add(calc, calc.history_list)
 
 ft.app(target=main, view=ft.WEB_BROWSER, host="0.0.0.0", port=3000)
