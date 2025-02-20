@@ -1,6 +1,7 @@
 import flet as ft
+import sympy as sp  # Biblioteca para avaliar expressões matemáticas
 
-
+# Classe base para os botões
 class CalcButton(ft.ElevatedButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__()
@@ -9,34 +10,35 @@ class CalcButton(ft.ElevatedButton):
         self.on_click = button_clicked
         self.data = text
 
-
+# Classe para botões de dígitos (0-9)
 class DigitButton(CalcButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__(text, button_clicked, expand)
         self.bgcolor = ft.colors.WHITE24
         self.color = ft.colors.WHITE
 
-
+# Classe para botões de operações (+, -, *, /)
 class ActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.ORANGE
         self.color = ft.colors.WHITE
 
-
+# Classe para botões de ações extras (AC, CE, ⬅️)
 class ExtraActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.BLUE_GREY_100
         self.color = ft.colors.BLACK
 
-
+# Classe principal da calculadora
 class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=32)
+        self.expression = ""  # Armazena a expressão atual para avaliação
 
-        
+        # Layout da calculadora com botões básicos, extras e o botão "="
         self.content = ft.Container(
             width=400,
             bgcolor=ft.colors.BLACK,
@@ -88,26 +90,37 @@ class CalculatorApp(ft.Container):
             ),
         )
 
-    
+    # Manipular cliques nos botões
     def button_clicked(self, e):
-        if e.control.data == "AC":  
+        if e.control.data == "AC":  # Limpar tudo
             self.result.value = "0"
-        elif e.control.data == "CE":  
+            self.expression = ""
+        elif e.control.data == "CE":  # Limpar a entrada atual
             self.result.value = "0"
-        elif e.control.data == "⬅️":  
+        elif e.control.data == "⬅️":  # Remover o último caractere
             self.result.value = self.result.value[:-1] if self.result.value else "0"
             if not self.result.value:
                 self.result.value = "0"
+        elif e.control.data == "=":  # Avaliar a expressão
+            try:
+                # Avaliar a expressão usando sympy
+                self.expression += self.result.value
+                resultado = sp.N(sp.sympify(self.expression))
+                self.result.value = str(resultado)
+                self.expression = ""
+            except Exception:
+                self.result.value = "Erro"
         else:
-            
-            if self.result.value == "0":
+            # Adicionar números e operadores
+            if self.result.value == "0" or self.result.value == "Erro":
                 self.result.value = e.control.data
             else:
                 self.result.value += e.control.data
         self.update()
 
+# Função principal para rodar a calculadora
 def main(page: ft.Page):
-    page.title = "Calculadora Simples"
+    page.title = "Calculadora Avançada"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     calc = CalculatorApp()
