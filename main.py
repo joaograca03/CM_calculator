@@ -3,7 +3,7 @@ import sympy as sp
 import datetime
 import json
 
-
+# Classe base para os botões
 class CalcButton(ft.ElevatedButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__()
@@ -12,37 +12,37 @@ class CalcButton(ft.ElevatedButton):
         self.on_click = button_clicked
         self.data = text
 
-
+# Classe para botões de dígitos (0-9)
 class DigitButton(CalcButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__(text, button_clicked, expand)
         self.bgcolor = ft.colors.WHITE24
         self.color = ft.colors.WHITE
 
-
+# Classe para botões de operações (+, -, *, /, =)
 class ActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.ORANGE
         self.color = ft.colors.WHITE
 
-
+# Classe para botões de ações extras (AC, CE, ⬅️, √, x², %)
 class ExtraActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.BLUE_GREY_100
         self.color = ft.colors.BLACK
 
-
+# Classe principal da calculadora
 class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=32)
-        self.expression = ""  
-        self.history = self.load_history()  
-        self.history_list = ft.Column(visible=False)  
+        self.expression = ""
+        self.history = self.load_history()  # Carrega o histórico ao iniciar
+        self.history_list = ft.Column(visible=False)  # Lista oculta do histórico
 
-        
+        # Layout da calculadora
         self.content = ft.Container(
             width=400,
             bgcolor=ft.colors.BLACK,
@@ -104,7 +104,7 @@ class CalculatorApp(ft.Container):
             ),
         )
 
-    
+    # Manipular cliques nos botões
     def button_clicked(self, e):
         if e.control.data == "AC":
             self.result.value = "0"
@@ -158,20 +158,20 @@ class CalculatorApp(ft.Container):
                 self.result.value += e.control.data
         self.update()
 
-    
+    # Adicionar expressão ao histórico
     def add_to_history(self, expression, result):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.history.insert(0, {"expression": expression, "result": str(result), "time": timestamp})
         if len(self.history) > 10:
-            self.history.pop()  
+            self.history.pop()
         self.save_history()
 
-    
+    # Salvar histórico em JSON
     def save_history(self):
         with open("calc_history.json", "w") as f:
             json.dump(self.history, f)
 
-    
+    # Carregar histórico de JSON
     def load_history(self):
         try:
             with open("calc_history.json", "r") as f:
@@ -179,25 +179,32 @@ class CalculatorApp(ft.Container):
         except FileNotFoundError:
             return []
 
-    
+    # Copiar resultado para a área de transferência
+    def copy_to_clipboard(self, value):
+        print(f"Copiado: {value}")
+
+    # Alternar exibição do histórico
     def toggle_history(self, e):
         if self.history_list.visible:
             self.history_list.visible = False
         else:
             self.history_list.controls = [
-                ft.Text(f"{item['time']} - {item['expression']} = {item['result']}")
+                ft.Row([
+                    ft.Text(f"{item['time']} - {item['expression']} = {item['result']}"),
+                    ft.IconButton(icon=ft.icons.COPY, on_click=lambda _, v=item['result']: self.copy_to_clipboard(v))
+                ])
                 for item in self.history
             ]
             self.history_list.visible = True
         self.update()
 
-    
+    # Limpar histórico
     def clear_history(self, e):
         self.history = []
         self.save_history()
         self.toggle_history(None)
 
-
+# Função principal
 def main(page: ft.Page):
     page.title = "Calculadora Avançada"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
@@ -206,3 +213,4 @@ def main(page: ft.Page):
     page.add(calc)
 
 ft.app(target=main, view=ft.WEB_BROWSER, host="0.0.0.0", port=3000)
+    
