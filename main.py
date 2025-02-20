@@ -1,5 +1,5 @@
 import flet as ft
-import sympy as sp  # Biblioteca para avaliar expressões matemáticas
+import sympy as sp  # Biblioteca para cálculos matemáticos avançados
 
 # Classe base para os botões
 class CalcButton(ft.ElevatedButton):
@@ -17,14 +17,14 @@ class DigitButton(CalcButton):
         self.bgcolor = ft.colors.WHITE24
         self.color = ft.colors.WHITE
 
-# Classe para botões de operações (+, -, *, /)
+# Classe para botões de operações (+, -, *, /, =)
 class ActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.ORANGE
         self.color = ft.colors.WHITE
 
-# Classe para botões de ações extras (AC, CE, ⬅️)
+# Classe para botões de ações extras (AC, CE, ⬅️, √, x², %)
 class ExtraActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
@@ -38,7 +38,7 @@ class CalculatorApp(ft.Container):
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=32)
         self.expression = ""  # Armazena a expressão atual para avaliação
 
-        # Layout da calculadora com botões básicos, extras e o botão "="
+        # Layout da calculadora com botões básicos, extras, avançados e o botão "="
         self.content = ft.Container(
             width=400,
             bgcolor=ft.colors.BLACK,
@@ -86,6 +86,13 @@ class CalculatorApp(ft.Container):
                             ActionButton("=", self.button_clicked),
                         ]
                     ),
+                    ft.Row(
+                        controls=[
+                            ExtraActionButton("√", self.button_clicked),
+                            ExtraActionButton("x²", self.button_clicked),
+                            ExtraActionButton("%", self.button_clicked),
+                        ]
+                    ),
                 ]
             ),
         )
@@ -108,6 +115,27 @@ class CalculatorApp(ft.Container):
                 resultado = sp.N(sp.sympify(self.expression))
                 self.result.value = str(resultado)
                 self.expression = ""
+            except Exception:
+                self.result.value = "Erro"
+        elif e.control.data == "√":  # Calcular raiz quadrada
+            try:
+                valor = float(self.result.value)
+                if valor >= 0:
+                    self.result.value = str(sp.N(sp.sqrt(valor)))
+                else:
+                    self.result.value = "Erro"
+            except Exception:
+                self.result.value = "Erro"
+        elif e.control.data == "x²":  # Calcular o quadrado do número
+            try:
+                valor = float(self.result.value)
+                self.result.value = str(valor ** 2)
+            except Exception:
+                self.result.value = "Erro"
+        elif e.control.data == "%":  # Calcular a porcentagem
+            try:
+                valor = float(self.result.value)
+                self.result.value = str(valor / 100)
             except Exception:
                 self.result.value = "Erro"
         else:
