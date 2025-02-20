@@ -1,6 +1,6 @@
 import flet as ft
 
-# Classe base para os botões
+
 class CalcButton(ft.ElevatedButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__()
@@ -9,27 +9,34 @@ class CalcButton(ft.ElevatedButton):
         self.on_click = button_clicked
         self.data = text
 
-# Classe para botões de dígitos (0-9)
+
 class DigitButton(CalcButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__(text, button_clicked, expand)
         self.bgcolor = ft.colors.WHITE24
         self.color = ft.colors.WHITE
 
-# Classe para botões de operações (+, -, *, /)
+
 class ActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
         self.bgcolor = ft.colors.ORANGE
         self.color = ft.colors.WHITE
 
-# Classe principal da calculadora
+
+class ExtraActionButton(CalcButton):
+    def __init__(self, text, button_clicked):
+        super().__init__(text, button_clicked)
+        self.bgcolor = ft.colors.BLUE_GREY_100
+        self.color = ft.colors.BLACK
+
+
 class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=32)
 
-        # Layout da calculadora com botões básicos
+        
         self.content = ft.Container(
             width=400,
             bgcolor=ft.colors.BLACK,
@@ -40,10 +47,18 @@ class CalculatorApp(ft.Container):
                     ft.Row(controls=[self.result], alignment=ft.MainAxisAlignment.END),
                     ft.Row(
                         controls=[
+                            ExtraActionButton("AC", self.button_clicked),
+                            ExtraActionButton("CE", self.button_clicked),
+                            ExtraActionButton("⬅️", self.button_clicked),
+                            ActionButton("/", self.button_clicked),
+                        ]
+                    ),
+                    ft.Row(
+                        controls=[
                             DigitButton("7", self.button_clicked),
                             DigitButton("8", self.button_clicked),
                             DigitButton("9", self.button_clicked),
-                            ActionButton("/", self.button_clicked),
+                            ActionButton("*", self.button_clicked),
                         ]
                     ),
                     ft.Row(
@@ -51,7 +66,7 @@ class CalculatorApp(ft.Container):
                             DigitButton("4", self.button_clicked),
                             DigitButton("5", self.button_clicked),
                             DigitButton("6", self.button_clicked),
-                            ActionButton("*", self.button_clicked),
+                            ActionButton("-", self.button_clicked),
                         ]
                     ),
                     ft.Row(
@@ -59,29 +74,38 @@ class CalculatorApp(ft.Container):
                             DigitButton("1", self.button_clicked),
                             DigitButton("2", self.button_clicked),
                             DigitButton("3", self.button_clicked),
-                            ActionButton("-", self.button_clicked),
+                            ActionButton("+", self.button_clicked),
                         ]
                     ),
                     ft.Row(
                         controls=[
                             DigitButton("0", self.button_clicked, expand=2),
                             DigitButton(".", self.button_clicked),
-                            ActionButton("+", self.button_clicked),
+                            ActionButton("=", self.button_clicked),
                         ]
                     ),
                 ]
             ),
         )
 
-    # Manipular cliques nos botões
+    
     def button_clicked(self, e):
-        if self.result.value == "0":
-            self.result.value = e.control.data
+        if e.control.data == "AC":  
+            self.result.value = "0"
+        elif e.control.data == "CE":  
+            self.result.value = "0"
+        elif e.control.data == "⬅️":  
+            self.result.value = self.result.value[:-1] if self.result.value else "0"
+            if not self.result.value:
+                self.result.value = "0"
         else:
-            self.result.value += e.control.data
+            
+            if self.result.value == "0":
+                self.result.value = e.control.data
+            else:
+                self.result.value += e.control.data
         self.update()
 
-# Função principal para rodar a calculadora
 def main(page: ft.Page):
     page.title = "Calculadora Simples"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
