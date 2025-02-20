@@ -1,5 +1,4 @@
 import flet as ft
-import sympy as sp
 
 # Classe base para os botões
 class CalcButton(ft.ElevatedButton):
@@ -14,21 +13,23 @@ class CalcButton(ft.ElevatedButton):
 class DigitButton(CalcButton):
     def __init__(self, text, button_clicked, expand=1):
         super().__init__(text, button_clicked, expand)
-        self.bgcolor = ft.colors.WHITE24  # Cor de fundo
-        self.color = ft.colors.WHITE      # Cor do texto
+        self.bgcolor = ft.colors.WHITE24
+        self.color = ft.colors.WHITE
 
-# Classe para botões de operações (+, -, *, /, etc.)
+# Classe para botões de operações (+, -, *, /)
 class ActionButton(CalcButton):
     def __init__(self, text, button_clicked):
         super().__init__(text, button_clicked)
-        self.bgcolor = ft.colors.ORANGE   # Cor de fundo
-        self.color = ft.colors.WHITE      # Cor do texto
+        self.bgcolor = ft.colors.ORANGE
+        self.color = ft.colors.WHITE
 
+# Classe principal da calculadora
 class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=32)
 
+        # Layout da calculadora com botões básicos
         self.content = ft.Container(
             width=400,
             bgcolor=ft.colors.BLACK,
@@ -72,6 +73,7 @@ class CalculatorApp(ft.Container):
             ),
         )
 
+    # Manipular cliques nos botões
     def button_clicked(self, e):
         if self.result.value == "0":
             self.result.value = e.control.data
@@ -79,8 +81,9 @@ class CalculatorApp(ft.Container):
             self.result.value += e.control.data
         self.update()
 
+# Função principal para rodar a calculadora
 def main(page: ft.Page):
-    page.title = "Calculadora Avançada"
+    page.title = "Calculadora Simples"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     calc = CalculatorApp()
