@@ -179,9 +179,12 @@ class CalculatorApp(ft.Container):
         except FileNotFoundError:
             return []
 
-    # Copiar resultado para a área de transferência
-    def copy_to_clipboard(self, value):
-        print(f"Copiado: {value}")
+    # Excluir item do histórico
+    def delete_from_history(self, index):
+        if 0 <= index < len(self.history):
+            self.history.pop(index)
+            self.save_history()
+            self.toggle_history(None)
 
     # Alternar exibição do histórico
     def toggle_history(self, e):
@@ -191,9 +194,10 @@ class CalculatorApp(ft.Container):
             self.history_list.controls = [
                 ft.Row([
                     ft.Text(f"{item['time']} - {item['expression']} = {item['result']}"),
-                    ft.IconButton(icon=ft.icons.COPY, on_click=lambda _, v=item['result']: self.copy_to_clipboard(v))
+                    ft.IconButton(icon=ft.icons.COPY, on_click=lambda _, v=item['result']: self.copy_to_clipboard(v)),
+                    ft.IconButton(icon=ft.icons.DELETE, on_click=lambda _, idx=i: self.delete_from_history(idx))
                 ])
-                for item in self.history
+                for i, item in enumerate(self.history)
             ]
             self.history_list.visible = True
         self.update()
@@ -213,4 +217,3 @@ def main(page: ft.Page):
     page.add(calc)
 
 ft.app(target=main, view=ft.WEB_BROWSER, host="0.0.0.0", port=3000)
-    
