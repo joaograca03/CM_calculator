@@ -1,7 +1,6 @@
 import flet as ft
 import sympy as sp
 import datetime
-import json
 
 class CalcButton(ft.ElevatedButton):
     def __init__(self, text, button_clicked, expand=1):
@@ -30,12 +29,13 @@ class ExtraActionButton(CalcButton):
         self.color = ft.colors.BLACK
 
 class CalculatorApp(ft.Container):
-    def __init__(self):
+    def __init__(self, page):
         super().__init__()
+        self.page = page
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=32)
         self.expression = ft.Text(value="", color=ft.colors.GREY_500, size=24)
-        self.history = self.load_history()  
-        self.history_list = ft.Column(visible=False)  
+        self.history = self.load_history()  # Carrega o histórico do client storage
+        self.history_list = ft.Column(visible=False)  # Coluna para exibir o histórico
         self.content = ft.Container(
             width=400,
             bgcolor=ft.colors.BLACK,
@@ -156,21 +156,19 @@ class CalculatorApp(ft.Container):
 
     def add_to_history(self, expression, result):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.history.insert(0, {"expression": expression, "result": result, "time": timestamp})
+        entry = {"expression": expression, "result": result, "time": timestamp}
+        self.history.insert(0, entry)
         if len(self.history) > 10:
             self.history.pop()
         self.save_history()
 
     def save_history(self):
-        with open("calc_history.json", "w") as f:
-            json.dump(self.history, f)
+        # Salva o histórico no client storage
+        self.page.client_storage.set("calc_history", self.history)
 
     def load_history(self):
-        try:
-            with open("calc_history.json", "r") as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return []
+        # Carrega o histórico do client storage
+        return self.page.client_storage.get("calc_history") or []
 
     def toggle_history(self, e):
         if self.history_list.visible:
@@ -195,7 +193,7 @@ class CalculatorApp(ft.Container):
     def delete_from_history(self, idx):
         if 0 <= idx < len(self.history):
             self.history.pop(idx)
-            self.save_history()  
+            self.save_history()
             self.toggle_history(None)
 
     def clear_history(self, e):
@@ -207,7 +205,7 @@ def main(page: ft.Page):
     page.title = "Calculadora Avançada"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    calc = CalculatorApp()
+    calc = CalculatorApp(page)
     page.add(calc, calc.history_list)
 
-ft.app(target=main, view=ft.WEB_BROWSER, host="0.0.0.0", port=3000)
+ft.app(target=main, view=ft.WEB_BROWSER, host="0.0.0.0", port=3000, assets_dir="assets")
